@@ -22,11 +22,49 @@ df = StringIO(text)
 dataset = pd.read_csv(df , sep = ",")
 
 #splitting the deopendent and independent variables
-X = dataset.iloc[: , :-1].values
+X = dataset.iloc[: , :-2].values
 y = dataset.iloc[: , 4].values
+y_dup = y
+
+from sklearn.preprocessing import LabelEncoder
+encoder = LabelEncoder()
+encoder.fit(y)
+y_dup = encoder.transform(y)
+
+
+#Predicting the attributes which are neccesarry
+import statsmodels.formula.api as sm
+"""ols_regressor = sm.OLS(endog = y_dup , exog = X)
+results = ols_regressor.fit()
+print (results.summary()) 
+print(results.rsquared)"""
+
+def BackwardElimination(X , y):
+    o_reg = sm.OLS(endog = y , exog = X)
+    ##res = o_reg.fit()
+    numvars = len(X[0])
+    for i in range(numvars):
+        o_reg = sm.OLS(endog = y , exog = X)
+        res = o_reg.fit()
+        prev_rs = res.rsquared()
+        np.delete(X[: , i])
+        o_reg = sm.OLS(endog = y , exog = X)
+        res = o_reg.fit()
+        cur_rs = res.rsquared()
+        if(cur_rs < prev_rs):
+            X = np.delete(X[: , i])
+            
+            
+    return X
+    
+        
+        
+    
+
+X_opt = BackwardElimination(X , y)
 
 #splitting data into training and test sets
-from sklearn.cross_validation import train_test_split
+from sklearn.model_selection import train_test_split
 X_train , X_test , y_train , y_test = train_test_split(X , y , test_size = 0.2 , random_state = 0)
 
 #since the values in the data are close to each ther hence feature scaling of values is not required.
